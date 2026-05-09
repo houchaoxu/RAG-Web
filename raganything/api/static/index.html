@@ -8,98 +8,478 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vis-network@9/standalone/umd/vis-network.min.js"></script>
-    <style>[x-cloak] { display: none !important; }</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(148, 163, 184, 0.12);
+            --glass-hover: rgba(30, 41, 59, 0.7);
+            --surface-1: rgba(15, 23, 42, 0.85);
+            --surface-2: rgba(30, 41, 59, 0.6);
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --gradient-accent: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+        }
+
+        * { scrollbar-width: thin; scrollbar-color: rgba(100, 116, 139, 0.3) transparent; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.5); }
+
+        body {
+            background: #0a0f1a;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.08), transparent),
+                radial-gradient(ellipse 50% 30% at 10% 80%, rgba(6, 182, 212, 0.06), transparent);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(1.2);
+            -webkit-backdrop-filter: blur(20px) saturate(1.2);
+            border: 1px solid var(--glass-border);
+        }
+
+        .glass-surface {
+            background: var(--surface-1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .glass-card {
+            background: var(--surface-2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            background: var(--glass-hover);
+            border-color: rgba(148, 163, 184, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(148, 163, 184, 0.1);
+        }
+
+        .glass-input {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), inset 0 0 20px rgba(59, 130, 246, 0.05);
+        }
+
+        .glass-input::placeholder { color: rgba(148, 163, 184, 0.4); }
+
+        .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gradient-border {
+            position: relative;
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: var(--gradient-accent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gradient-border:hover::before { opacity: 1; }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-primary:hover::after { opacity: 1; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            background: rgba(51, 65, 85, 0.5);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(71, 85, 105, 0.5);
+            color: #e2e8f0;
+            border-color: rgba(148, 163, 184, 0.25);
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3); }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3); }
+
+        .tab-active {
+            color: #e2e8f0;
+            border-bottom: 2px solid transparent;
+            background-image: linear-gradient(to right, #3b82f6, #8b5cf6);
+            background-size: 100% 2px;
+            background-position: bottom;
+            background-repeat: no-repeat;
+        }
+
+        .tab-inactive {
+            color: rgba(148, 163, 184, 0.6);
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-inactive:hover {
+            color: #94a3b8;
+            background-color: rgba(51, 65, 85, 0.3);
+        }
+
+        .status-badge {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .stat-card {
+            background: var(--surface-2);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(148, 163, 184, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-bar {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: var(--gradient-primary);
+            border-radius: 9999px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .glow-dot {
+            box-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+        }
+
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        thead th {
+            background: rgba(15, 23, 42, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(51, 65, 85, 0.3);
+        }
+
+        .vis-tooltip {
+            background: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(148, 163, 184, 0.2) !important;
+            color: #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+        }
+
+        #kg-graph-container {
+            background: rgba(10, 15, 26, 0.8) !important;
+            border: 1px solid var(--glass-border) !important;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .subtab-active {
+            color: #e2e8f0;
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .subtab-inactive {
+            color: rgba(148, 163, 184, 0.6);
+            border-color: transparent;
+        }
+
+        .subtab-inactive:hover {
+            color: #94a3b8;
+            background: rgba(51, 65, 85, 0.3);
+        }
+
+        .checkbox-glass {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 4px;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-glass:checked {
+            background: var(--gradient-primary);
+            border-color: transparent;
+        }
+
+        .checkbox-glass:checked::after {
+            content: '';
+            display: block;
+            width: 5px;
+            height: 9px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg) translate(-1px, -1px);
+            margin: 1px auto;
+        }
+
+        .select-glass {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .select-glass:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .select-glass option {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .toast-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #6ee7b7;
+            backdrop-filter: blur(12px);
+        }
+
+        .toast-error {
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.25);
+            color: #fda4af;
+            backdrop-filter: blur(12px);
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen" x-data="app()" x-cloak>
+<body class="min-h-screen" x-data="app()" x-cloak>
 
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-            <h1 class="text-xl font-bold text-gray-800">RAG-Anything</h1>
-            <span class="text-sm text-gray-500" x-text="'v' + version"></span>
+    <header class="glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: var(--gradient-primary);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        <path d="M8 7h8M8 11h6"></path>
+                    </svg>
+                </div>
+                <h1 class="text-lg font-semibold text-slate-100 tracking-tight">RAG-Anything</h1>
+            </div>
+            <span class="text-xs font-mono text-slate-500 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50" x-text="'v' + version"></span>
         </div>
     </header>
 
     <!-- Navigation -->
-    <nav class="bg-white border-b">
-        <div class="max-w-6xl mx-auto px-4 flex gap-1">
+    <nav class="glass border-b border-slate-700/30">
+        <div class="max-w-7xl mx-auto px-6 flex gap-1 overflow-x-auto">
             <template x-for="tab in tabs" :key="tab.id">
                 <button @click="activeTab = tab.id"
-                    :class="activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                    class="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+                    :class="activeTab === tab.id ? 'tab-active' : 'tab-inactive'"
+                    class="px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200"
                     x-text="tab.label"></button>
             </template>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto px-4 py-6">
+    <main class="max-w-7xl mx-auto px-6 py-6">
 
         <!-- Toast -->
-        <div x-show="message" x-transition
-             :class="messageType === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'"
-             class="mb-4 p-3 rounded-lg border text-sm flex justify-between items-center">
+        <div x-show="message" x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             :class="messageType === 'error' ? 'toast-error' : 'toast-success'"
+             class="mb-5 p-4 rounded-xl text-sm flex justify-between items-center">
             <span x-text="message"></span>
-            <button @click="message = ''" class="text-gray-400 hover:text-gray-600">&times;</button>
+            <button @click="message = ''" class="text-current opacity-50 hover:opacity-100 transition-opacity ml-4 text-lg leading-none">&times;</button>
         </div>
 
         <!-- ========== Documents List Tab ========== -->
         <div x-show="activeTab === 'documents'" x-transition x-init="$watch('activeTab', v => { if (v === 'documents') loadDocuments() })">
-            <div class="bg-white rounded-lg shadow p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold">Processed Documents</h2>
-                    <button @click="loadDocuments()" class="text-sm text-blue-600 hover:text-blue-800">Refresh</button>
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-blue-500 glow-dot" style="color: #3b82f6;"></div>
+                        <h2 class="text-base font-semibold text-slate-100">Processed Documents</h2>
+                    </div>
+                    <button @click="loadDocuments()" class="btn-secondary px-4 py-1.5 rounded-lg text-xs font-medium">Refresh</button>
                 </div>
 
                 <!-- Empty state -->
-                <div x-show="docList.length === 0" class="text-center py-12 text-gray-400">
-                    <p class="text-lg mb-1">No documents yet</p>
-                    <p class="text-sm">Upload a document in the Upload tab to get started.</p>
+                <div x-show="docList.length === 0" class="text-center py-16">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style="background: rgba(59, 130, 246, 0.1); border: 1px dashed rgba(59, 130, 246, 0.3);">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(59,130,246,0.5)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <p class="text-sm text-slate-400 mb-1">No documents yet</p>
+                    <p class="text-xs text-slate-600">Upload a document in the Upload tab to get started.</p>
                 </div>
 
                 <!-- Document table -->
-                <div x-show="docList.length > 0" class="overflow-x-auto">
+                <div x-show="docList.length > 0" class="overflow-x-auto rounded-xl">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="text-left text-gray-500 border-b">
-                                <th class="pb-2 pr-4">Doc ID</th>
-                                <th class="pb-2 pr-4">File</th>
-                                <th class="pb-2 pr-4">Status</th>
-                                <th class="pb-2 pr-4 text-center">Text</th>
-                                <th class="pb-2 pr-4 text-center">Multimodal</th>
-                                <th class="pb-2 pr-4 text-right">Chunks</th>
-                                <th class="pb-2">Updated</th>
+                            <tr class="text-left text-slate-500 border-b border-slate-700/50">
+                                <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Doc ID</th>
+                                <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">File</th>
+                                <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Status</th>
+                                <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider text-center">Text</th>
+                                <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider text-center">Multimodal</th>
+                                <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider text-right">Chunks</th>
+                                <th class="pb-3 font-medium text-xs uppercase tracking-wider">Updated</th>
                             </tr>
                         </thead>
                         <tbody>
                             <template x-for="doc in docList" :key="doc.doc_id">
-                                <tr class="border-b last:border-0 hover:bg-gray-50">
-                                    <td class="py-2.5 pr-4">
-                                        <span class="font-mono text-xs" x-text="doc.doc_id.length > 20 ? doc.doc_id.slice(0, 20) + '...' : doc.doc_id"
+                                <tr class="border-b border-slate-800/50 last:border-0">
+                                    <td class="py-3 pr-4">
+                                        <span class="font-mono text-xs text-slate-300" x-text="doc.doc_id.length > 20 ? doc.doc_id.slice(0, 20) + '...' : doc.doc_id"
                                               :title="doc.doc_id"></span>
                                     </td>
-                                    <td class="py-2.5 pr-4">
-                                        <span class="text-xs text-gray-600 truncate block max-w-xs" x-text="doc.file_path || '-'" :title="doc.file_path"></span>
+                                    <td class="py-3 pr-4">
+                                        <span class="text-xs text-slate-400 truncate block max-w-xs" x-text="doc.file_path || '-'" :title="doc.file_path"></span>
                                     </td>
-                                    <td class="py-2.5 pr-4">
-                                        <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                                    <td class="py-3 pr-4">
+                                        <span class="status-badge inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
                                               :class="{
-                                                  'bg-green-100 text-green-700': doc.fully_processed,
-                                                  'bg-yellow-100 text-yellow-700': doc.status === 'processing',
-                                                  'bg-red-100 text-red-700': doc.status === 'failed',
-                                                  'bg-gray-100 text-gray-600': !doc.fully_processed && doc.status !== 'processing' && doc.status !== 'failed',
+                                                  'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20': doc.fully_processed,
+                                                  'bg-amber-500/15 text-amber-400 border border-amber-500/20': doc.status === 'processing',
+                                                  'bg-rose-500/15 text-rose-400 border border-rose-500/20': doc.status === 'failed',
+                                                  'bg-slate-500/15 text-slate-400 border border-slate-500/20': !doc.fully_processed && doc.status !== 'processing' && doc.status !== 'failed',
                                               }"
                                               x-text="doc.fully_processed ? 'Done' : doc.status || 'unknown'"></span>
                                     </td>
-                                    <td class="py-2.5 pr-4 text-center">
-                                        <span x-show="doc.text_processed" class="text-green-500">&#10003;</span>
-                                        <span x-show="!doc.text_processed" class="text-gray-300">&#10007;</span>
+                                    <td class="py-3 pr-4 text-center">
+                                        <span x-show="doc.text_processed" class="text-emerald-400">&#10003;</span>
+                                        <span x-show="!doc.text_processed" class="text-slate-700">&#10007;</span>
                                     </td>
-                                    <td class="py-2.5 pr-4 text-center">
-                                        <span x-show="doc.multimodal_processed" class="text-green-500">&#10003;</span>
-                                        <span x-show="!doc.multimodal_processed" class="text-gray-300">&#10007;</span>
+                                    <td class="py-3 pr-4 text-center">
+                                        <span x-show="doc.multimodal_processed" class="text-emerald-400">&#10003;</span>
+                                        <span x-show="!doc.multimodal_processed" class="text-slate-700">&#10007;</span>
                                     </td>
-                                    <td class="py-2.5 pr-4 text-right font-mono text-xs" x-text="doc.chunks_count"></td>
-                                    <td class="py-2.5 text-gray-400 text-xs" x-text="doc.updated_at ? new Date(doc.updated_at).toLocaleString() : '-'"></td>
+                                    <td class="py-3 pr-4 text-right font-mono text-xs text-slate-400" x-text="doc.chunks_count"></td>
+                                    <td class="py-3 text-slate-600 text-xs" x-text="doc.updated_at ? new Date(doc.updated_at).toLocaleString() : '-'"></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -107,14 +487,14 @@
                 </div>
 
                 <!-- Pagination -->
-                <div x-show="docTotal > 50" class="flex items-center justify-between mt-4 text-sm text-gray-500">
-                    <span x-text="'Total: ' + docTotal + ' documents'"></span>
+                <div x-show="docTotal > 50" class="flex items-center justify-between mt-5 text-sm text-slate-500">
+                    <span x-text="'Total: ' + docTotal + ' documents'" class="text-xs"></span>
                     <div class="flex gap-2">
                         <button @click="loadDocuments(docPage - 1)" :disabled="docPage <= 1"
-                                class="px-3 py-1 rounded border disabled:opacity-40 hover:bg-gray-100">Prev</button>
-                        <span class="px-3 py-1" x-text="'Page ' + docPage"></span>
+                                class="btn-secondary px-3 py-1 rounded-lg text-xs disabled:opacity-30">Prev</button>
+                        <span class="px-3 py-1 text-xs text-slate-400" x-text="'Page ' + docPage"></span>
                         <button @click="loadDocuments(docPage + 1)" :disabled="docList.length < 50"
-                                class="px-3 py-1 rounded border disabled:opacity-40 hover:bg-gray-100">Next</button>
+                                class="btn-secondary px-3 py-1 rounded-lg text-xs disabled:opacity-30">Next</button>
                     </div>
                 </div>
             </div>
@@ -124,66 +504,74 @@
         <div x-show="activeTab === 'upload'" x-transition>
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- Process Document -->
-                <div class="bg-white rounded-lg shadow p-5">
-                    <h2 class="text-lg font-semibold mb-4">Process Document</h2>
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-2 h-2 rounded-full bg-blue-500 glow-dot" style="color: #3b82f6;"></div>
+                        <h2 class="text-base font-semibold text-slate-100">Process Document</h2>
+                    </div>
                     <form @submit.prevent="processDocument()">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">File Path</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">File Path</label>
                         <input x-model="docForm.file_path" type="text"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-1"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-2"
                                placeholder="/path/to/document.pdf">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-xs text-gray-400">or</span>
-                            <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-xs text-slate-600">or</span>
+                            <label class="cursor-pointer btn-secondary px-4 py-1.5 rounded-lg text-xs font-medium">
                                 Upload File
                                 <input type="file" class="hidden" accept=".pdf,.doc,.docx,.txt,.md,.html,.png,.jpg,.jpeg,.bmp,.pptx,.xlsx"
                                        @change="uploadFile($event)">
                             </label>
-                            <span x-show="uploadFileName" class="text-xs text-green-600" x-text="uploadFileName"></span>
+                            <span x-show="uploadFileName" class="text-xs text-emerald-400" x-text="uploadFileName"></span>
                         </div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Parse Method</label>
-                        <select x-model="docForm.parse_method" class="w-full border rounded-lg px-3 py-2 text-sm mb-3">
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Parse Method</label>
+                        <select x-model="docForm.parse_method" class="select-glass w-full rounded-xl px-4 py-2.5 text-sm mb-5">
                             <option value="">Default (auto)</option>
                             <option value="auto">Auto</option>
                             <option value="ocr">OCR</option>
                             <option value="txt">Text</option>
                         </select>
                         <button type="submit" :disabled="loading"
-                                class="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-                            <span x-show="!loading">Process</span>
-                            <span x-show="loading">Processing...</span>
+                                class="btn-primary w-full rounded-xl py-2.5 text-sm font-medium disabled:opacity-50 disabled:transform-none">
+                            <span x-show="!loading">Process Document</span>
+                            <span x-show="loading" class="flex items-center justify-center gap-2">
+                                <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                Processing...
+                            </span>
                         </button>
                         <!-- Progress indicator -->
-                        <div x-show="loading" class="mt-3">
-                            <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                <svg class="animate-spin h-3 w-3 text-blue-500" viewBox="0 0 24 24">
+                        <div x-show="loading" class="mt-4">
+                            <div class="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                                <svg class="animate-spin h-3 w-3 text-blue-400" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                                 </svg>
                                 <span x-text="taskStageLabel || 'Waiting...'"></span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
-                                     :style="'width:' + taskProgress + '%'"></div>
+                            <div class="progress-bar h-1.5">
+                                <div class="progress-fill h-full" :style="'width:' + taskProgress + '%'"></div>
                             </div>
                         </div>
                     </form>
                 </div>
 
                 <!-- Insert Content -->
-                <div class="bg-white rounded-lg shadow p-5">
-                    <h2 class="text-lg font-semibold mb-4">Insert Content List</h2>
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-2 h-2 rounded-full bg-cyan-500 glow-dot" style="color: #06b6d4;"></div>
+                        <h2 class="text-base font-semibold text-slate-100">Insert Content List</h2>
+                    </div>
                     <form @submit.prevent="insertContent()">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Content JSON</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Content JSON</label>
                         <textarea x-model="insertForm.content_json" rows="8"
-                                  class="w-full border rounded-lg px-3 py-2 text-sm font-mono mb-3"
+                                  class="glass-input w-full rounded-xl px-4 py-3 text-sm font-mono mb-4 resize-none"
                                   placeholder='[{"type":"text","text":"Hello world","page_idx":0}]'></textarea>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Source File (optional)</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Source File (optional)</label>
                         <input x-model="insertForm.file_path" type="text"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-5"
                                placeholder="document.pdf">
                         <button type="submit" :disabled="loading"
-                                class="w-full bg-indigo-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
-                            Insert
+                                class="btn-accent w-full rounded-xl py-2.5 text-sm font-medium disabled:opacity-50 disabled:transform-none">
+                            Insert Content
                         </button>
                     </form>
                 </div>
@@ -192,19 +580,22 @@
 
         <!-- ========== Query Tab ========== -->
         <div x-show="activeTab === 'query'" x-transition>
-            <div class="bg-white rounded-lg shadow p-5">
-                <h2 class="text-lg font-semibold mb-4">Query</h2>
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-2 h-2 rounded-full bg-purple-500 glow-dot" style="color: #8b5cf6;"></div>
+                    <h2 class="text-base font-semibold text-slate-100">Query</h2>
+                </div>
                 <form @submit.prevent="runQuery()">
-                    <div class="grid md:grid-cols-3 gap-4 mb-3">
+                    <div class="grid md:grid-cols-3 gap-4 mb-4">
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Question</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Question</label>
                             <input x-model="queryForm.query" type="text" required
-                                   class="w-full border rounded-lg px-3 py-2 text-sm"
+                                   class="glass-input w-full rounded-xl px-4 py-2.5 text-sm"
                                    placeholder="Ask a question about your documents...">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Mode</label>
-                            <select x-model="queryForm.mode" class="w-full border rounded-lg px-3 py-2 text-sm">
+                            <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Mode</label>
+                            <select x-model="queryForm.mode" class="select-glass w-full rounded-xl px-4 py-2.5 text-sm">
                                 <option value="mix">Mix</option>
                                 <option value="hybrid">Hybrid</option>
                                 <option value="local">Local</option>
@@ -213,45 +604,56 @@
                             </select>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4 mb-4">
-                        <label class="flex items-center gap-2 text-sm">
-                            <input type="checkbox" x-model="queryForm.vlm_enhanced" class="rounded">
+                    <div class="flex items-center gap-5 mb-2">
+                        <label class="flex items-center gap-2.5 text-sm text-slate-400 cursor-pointer">
+                            <input type="checkbox" x-model="queryForm.vlm_enhanced" class="checkbox-glass">
                             VLM Enhanced
                         </label>
                         <button type="submit" :disabled="loading"
-                                class="bg-blue-600 text-white rounded-lg px-6 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-                            <span x-show="!loading">Search</span>
-                            <span x-show="loading">Searching...</span>
+                                class="btn-primary rounded-xl px-8 py-2.5 text-sm font-medium disabled:opacity-50 disabled:transform-none">
+                            <span x-show="!loading" class="flex items-center gap-2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                Search
+                            </span>
+                            <span x-show="loading" class="flex items-center gap-2">
+                                <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                Searching...
+                            </span>
                         </button>
                     </div>
                 </form>
                 <!-- Thinking block -->
-                <div x-show="queryThinking" x-collapse class="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                    <div class="flex items-center gap-2 mb-2 cursor-pointer" @click="showThinking = !showThinking">
-                        <h3 class="text-sm font-medium text-amber-700">Thinking</h3>
-                        <span class="text-xs text-amber-500" x-text="showThinking ? '▲ collapse' : '▼ expand'"></span>
-                        <span x-show="!queryThinkingDone" class="ml-1 w-2 h-2 bg-amber-400 rounded-full"></span>
+                <div x-show="queryThinking" x-collapse class="mt-5 p-4 rounded-xl border border-amber-500/20" style="background: rgba(245, 158, 11, 0.05);">
+                    <div class="flex items-center gap-2 mb-2 cursor-pointer select-none" @click="showThinking = !showThinking">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
+                        <h3 class="text-sm font-medium text-amber-400">Thinking</h3>
+                        <span class="text-xs text-amber-500/60" x-text="showThinking ? 'collapse' : 'expand'"></span>
+                        <span x-show="!queryThinkingDone" class="ml-1 w-2 h-2 rounded-full animate-pulse-slow" style="background: #f59e0b;"></span>
                     </div>
-                    <div x-show="showThinking" x-collapse class="text-xs text-amber-900/70 whitespace-pre-wrap max-h-64 overflow-y-auto" x-text="queryThinking"></div>
+                    <div x-show="showThinking" x-collapse class="text-xs text-amber-200/60 whitespace-pre-wrap max-h-64 overflow-y-auto leading-relaxed" x-text="queryThinking"></div>
                 </div>
                 <!-- Answer block -->
-                <div x-show="queryResult" class="mt-4 p-4 bg-gray-50 rounded-lg border">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Answer</h3>
-                    <div class="text-sm text-gray-800 whitespace-pre-wrap" x-text="queryResult"></div>
+                <div x-show="queryResult" class="mt-5 p-5 rounded-xl border border-slate-700/50" style="background: rgba(15, 23, 42, 0.5);">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <h3 class="text-sm font-medium text-blue-400">Answer</h3>
+                    </div>
+                    <div class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed" x-text="queryResult"></div>
                 </div>
                 <!-- References block -->
-                <div x-show="queryReferences.length > 0" x-collapse class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div class="flex items-center gap-2 mb-2 cursor-pointer" @click="showReferences = !showReferences">
-                        <h3 class="text-sm font-medium text-blue-700">References</h3>
-                        <span class="text-xs text-blue-500" x-text="showReferences ? '▲ collapse' : '▼ expand'"></span>
+                <div x-show="queryReferences.length > 0" x-collapse class="mt-5 p-4 rounded-xl border border-blue-500/20" style="background: rgba(59, 130, 246, 0.05);">
+                    <div class="flex items-center gap-2 mb-3 cursor-pointer select-none" @click="showReferences = !showReferences">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        <h3 class="text-sm font-medium text-blue-400">References</h3>
+                        <span class="text-xs text-blue-500/60" x-text="showReferences ? 'collapse' : 'expand'"></span>
                     </div>
                     <div x-show="showReferences" x-collapse>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="(ref, i) in queryReferences" :key="i">
-                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border"
-                                     :class="ref.type === 'entity' ? 'bg-blue-100 border-blue-200 text-blue-800' : 'bg-purple-100 border-purple-200 text-purple-800'">
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs"
+                                     :class="ref.type === 'entity' ? 'bg-blue-500/10 border border-blue-500/20 text-blue-300' : 'bg-purple-500/10 border border-purple-500/20 text-purple-300'">
                                     <span class="font-medium" x-text="ref.type === 'entity' ? ref.name : ref.source + ' → ' + ref.target"></span>
-                                    <span class="text-gray-400" x-text="ref.description" :title="ref.description"></span>
+                                    <span class="text-slate-500" x-text="ref.description" :title="ref.description"></span>
                                 </div>
                             </template>
                         </div>
@@ -264,43 +666,46 @@
         <div x-show="activeTab === 'config'" x-transition>
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- LLM Config -->
-                <div class="bg-white rounded-lg shadow p-5">
-                    <h2 class="text-lg font-semibold mb-4">LLM Configuration</h2>
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-2 h-2 rounded-full bg-blue-500 glow-dot" style="color: #3b82f6;"></div>
+                        <h2 class="text-base font-semibold text-slate-100">LLM Configuration</h2>
+                    </div>
                     <form @submit.prevent="saveLLMConfig()">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
-                        <select x-model="llmForm.provider" class="w-full border rounded-lg px-3 py-2 text-sm mb-3">
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Provider</label>
+                        <select x-model="llmForm.provider" class="select-glass w-full rounded-xl px-4 py-2.5 text-sm mb-4">
                             <option value="openai">OpenAI</option>
                             <option value="ollama">Ollama</option>
                             <option value="azure_openai">Azure OpenAI</option>
                             <option value="lmstudio">LM Studio</option>
                             <option value="vllm">vLLM</option>
                         </select>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Model</label>
                         <input x-model="llmForm.model" type="text"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
                                placeholder="gpt-4o-mini">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Vision Model (optional)</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Vision Model (optional)</label>
                         <input x-model="llmForm.vision_model" type="text"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
                                placeholder="gpt-4o">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">API Key</label>
                         <input x-model="llmForm.api_key" type="password"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
                                placeholder="sk-...">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Base URL</label>
                         <input x-model="llmForm.base_url" type="text"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
                                placeholder="https://api.openai.com/v1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Temperature</label>
                         <input x-model.number="llmForm.temperature" type="number" step="0.1" min="0" max="2"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3">
-                        <div class="flex gap-2">
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-5">
+                        <div class="flex gap-3">
                             <button type="submit" :disabled="loading"
-                                    class="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                                    class="flex-1 btn-primary rounded-xl py-2.5 text-sm font-medium disabled:opacity-50 disabled:transform-none">
                                 Save LLM Config
                             </button>
                             <button type="button" @click="testLLM()" :disabled="loading"
-                                    class="px-4 bg-gray-100 text-gray-700 rounded-lg py-2 text-sm font-medium hover:bg-gray-200 disabled:opacity-50">
+                                    class="btn-secondary px-5 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50">
                                 Test
                             </button>
                         </div>
@@ -308,59 +713,65 @@
                 </div>
 
                 <!-- Embedding Config -->
-                <div class="bg-white rounded-lg shadow p-5">
-                    <h2 class="text-lg font-semibold mb-4">Embedding Configuration</h2>
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-2 h-2 rounded-full bg-cyan-500 glow-dot" style="color: #06b6d4;"></div>
+                        <h2 class="text-base font-semibold text-slate-100">Embedding Configuration</h2>
+                    </div>
                     <form @submit.prevent="saveEmbeddingConfig()">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
-                        <select x-model="embedForm.provider" class="w-full border rounded-lg px-3 py-2 text-sm mb-3">
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Provider</label>
+                        <select x-model="embedForm.provider" class="select-glass w-full rounded-xl px-4 py-2.5 text-sm mb-4">
                             <option value="openai">OpenAI</option>
                             <option value="ollama">Ollama</option>
                             <option value="azure_openai">Azure OpenAI</option>
                             <option value="local">Local (sentence-transformers)</option>
                         </select>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Model</label>
                         <input x-model="embedForm.model" type="text"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
                                placeholder="BAAI/bge-large-zh-v1.5">
                         <div x-show="embedForm.provider === 'local'">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Local Model Path (optional)</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Local Model Path (optional)</label>
                             <input x-model="embedForm.model_path" type="text"
-                                   class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                                   class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
                                    placeholder="/path/to/models--BAAI--bge-large-zh-v1.5">
                         </div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">API Key</label>
                         <input x-model="embedForm.api_key" type="password"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
                                placeholder="sk-...">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Base URL</label>
                         <input x-model="embedForm.base_url" type="text"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-4"
                                placeholder="https://api.openai.com/v1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Dimension</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Dimension</label>
                         <input x-model.number="embedForm.dimension" type="number"
-                               class="w-full border rounded-lg px-3 py-2 text-sm mb-3"
+                               class="glass-input w-full rounded-xl px-4 py-2.5 text-sm mb-5"
                                placeholder="3072">
                         <button type="submit" :disabled="loading"
-                                class="w-full bg-indigo-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                                class="btn-accent w-full rounded-xl py-2.5 text-sm font-medium disabled:opacity-50 disabled:transform-none">
                             Save Embedding Config
                         </button>
                     </form>
                 </div>
 
                 <!-- RAG Config -->
-                <div class="bg-white rounded-lg shadow p-5 md:col-span-2">
-                    <h2 class="text-lg font-semibold mb-4">RAG Processing Config</h2>
+                <div class="glass-card rounded-2xl p-6 md:col-span-2">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 glow-dot" style="color: #10b981;"></div>
+                        <h2 class="text-base font-semibold text-slate-100">RAG Processing Config</h2>
+                    </div>
                     <form @submit.prevent="saveRAGConfig()">
                         <div class="grid md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Working Directory</label>
+                                <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Working Directory</label>
                                 <input x-model="ragForm.working_dir" type="text"
-                                       class="w-full border rounded-lg px-3 py-2 text-sm"
+                                       class="glass-input w-full rounded-xl px-4 py-2.5 text-sm"
                                        placeholder="./rag_storage">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Parser</label>
-                                <select x-model="ragForm.parser" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Parser</label>
+                                <select x-model="ragForm.parser" class="select-glass w-full rounded-xl px-4 py-2.5 text-sm">
                                     <option value="">Default</option>
                                     <option value="mineru">MinerU</option>
                                     <option value="docling">Docling</option>
@@ -368,8 +779,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Parse Method</label>
-                                <select x-model="ragForm.parse_method" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Parse Method</label>
+                                <select x-model="ragForm.parse_method" class="select-glass w-full rounded-xl px-4 py-2.5 text-sm">
                                     <option value="">Default</option>
                                     <option value="auto">Auto</option>
                                     <option value="ocr">OCR</option>
@@ -377,8 +788,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">MinerU Backend</label>
-                                <select x-model="ragForm.mineru_backend" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">MinerU Backend</label>
+                                <select x-model="ragForm.mineru_backend" class="select-glass w-full rounded-xl px-4 py-2.5 text-sm">
                                     <option value="">Default (pipeline)</option>
                                     <option value="pipeline">Pipeline (fast)</option>
                                     <option value="hybrid-auto-engine">Hybrid VLM (accurate, slow)</option>
@@ -386,13 +797,13 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Context Window</label>
+                                <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Context Window</label>
                                 <input x-model.number="ragForm.context_window" type="number"
-                                       class="w-full border rounded-lg px-3 py-2 text-sm">
+                                       class="glass-input w-full rounded-xl px-4 py-2.5 text-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Context Mode</label>
-                                <select x-model="ragForm.context_mode" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Context Mode</label>
+                                <select x-model="ragForm.context_mode" class="select-glass w-full rounded-xl px-4 py-2.5 text-sm">
                                     <option value="">Default</option>
                                     <option value="page">Page</option>
                                     <option value="chunk">Chunk</option>
@@ -400,27 +811,27 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Max Context Tokens</label>
+                                <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Max Context Tokens</label>
                                 <input x-model.number="ragForm.max_context_tokens" type="number"
-                                       class="w-full border rounded-lg px-3 py-2 text-sm">
+                                       class="glass-input w-full rounded-xl px-4 py-2.5 text-sm">
                             </div>
                         </div>
-                        <div class="flex gap-4 mt-4">
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" x-model="ragForm.enable_image_processing" class="rounded">
+                        <div class="flex gap-6 mt-5">
+                            <label class="flex items-center gap-2.5 text-sm text-slate-400 cursor-pointer">
+                                <input type="checkbox" x-model="ragForm.enable_image_processing" class="checkbox-glass">
                                 Image Processing
                             </label>
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" x-model="ragForm.enable_table_processing" class="rounded">
+                            <label class="flex items-center gap-2.5 text-sm text-slate-400 cursor-pointer">
+                                <input type="checkbox" x-model="ragForm.enable_table_processing" class="checkbox-glass">
                                 Table Processing
                             </label>
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" x-model="ragForm.enable_equation_processing" class="rounded">
+                            <label class="flex items-center gap-2.5 text-sm text-slate-400 cursor-pointer">
+                                <input type="checkbox" x-model="ragForm.enable_equation_processing" class="checkbox-glass">
                                 Equation Processing
                             </label>
                         </div>
                         <button type="submit" :disabled="loading"
-                                class="mt-4 bg-green-600 text-white rounded-lg px-6 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">
+                                class="mt-5 btn-success rounded-xl px-8 py-2.5 text-sm font-medium disabled:opacity-50 disabled:transform-none">
                             Save RAG Config
                         </button>
                     </form>
@@ -430,29 +841,32 @@
 
         <!-- ========== Knowledge Graph Tab ========== -->
         <div x-show="activeTab === 'graph'" x-transition x-init="$watch('activeTab', v => { if (v === 'graph') { loadGraphStats(); loadEntities(); } })">
-            <div class="bg-white rounded-lg shadow p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold">Knowledge Graph</h2>
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-purple-500 glow-dot" style="color: #8b5cf6;"></div>
+                        <h2 class="text-base font-semibold text-slate-100">Knowledge Graph</h2>
+                    </div>
                     <button @click="loadGraphStats(); if(graphTab==='entities') loadEntities(); else if(graphTab==='relations') loadRelations(); else loadGraphNetwork();"
-                            class="text-sm text-blue-600 hover:text-blue-800">Refresh</button>
+                            class="btn-secondary px-4 py-1.5 rounded-lg text-xs font-medium">Refresh</button>
                 </div>
 
                 <!-- Stats bar -->
-                <div x-show="graphStats" class="flex gap-4 mb-5">
-                    <div class="px-4 py-2 bg-blue-50 rounded-lg">
-                        <div class="text-xs text-blue-500">Entities</div>
-                        <div class="text-xl font-bold text-blue-700" x-text="graphStats?.entity_count ?? 0"></div>
+                <div x-show="graphStats" class="flex gap-4 mb-6">
+                    <div class="stat-card rounded-xl px-5 py-3 min-w-[120px]">
+                        <div class="text-xs text-slate-500 mb-1">Entities</div>
+                        <div class="text-2xl font-bold gradient-text" x-text="graphStats?.entity_count ?? 0"></div>
                     </div>
-                    <div class="px-4 py-2 bg-purple-50 rounded-lg">
-                        <div class="text-xs text-purple-500">Relations</div>
-                        <div class="text-xl font-bold text-purple-700" x-text="graphStats?.relation_count ?? 0"></div>
+                    <div class="stat-card rounded-xl px-5 py-3 min-w-[120px]">
+                        <div class="text-xs text-slate-500 mb-1">Relations</div>
+                        <div class="text-2xl font-bold" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;" x-text="graphStats?.relation_count ?? 0"></div>
                     </div>
                     <template x-if="graphStats?.entity_types && Object.keys(graphStats.entity_types).length > 0">
-                        <div class="flex gap-2 items-center flex-wrap ml-4">
+                        <div class="flex gap-2 items-center flex-wrap ml-2">
                             <template x-for="[type, count] in Object.entries(graphStats.entity_types).sort((a,b) => b[1]-a[1]).slice(0,8)" :key="type">
-                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
-                                    <span class="text-gray-600" x-text="type"></span>
-                                    <span class="text-gray-400" x-text="count"></span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-slate-800/60 border border-slate-700/50">
+                                    <span class="text-slate-400" x-text="type"></span>
+                                    <span class="text-slate-600 font-mono" x-text="count"></span>
                                 </span>
                             </template>
                         </div>
@@ -460,62 +874,65 @@
                 </div>
 
                 <!-- Sub-tabs -->
-                <div class="flex gap-1 border-b mb-4">
+                <div class="flex gap-1 border-b border-slate-700/50 mb-5">
                     <button @click="graphTab = 'entities'; loadEntities()"
-                        :class="graphTab === 'entities' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                        class="px-4 py-2 text-sm font-medium border-b-2 transition-colors">Entities</button>
+                        :class="graphTab === 'entities' ? 'subtab-active' : 'subtab-inactive'"
+                        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-200 rounded-t-lg">Entities</button>
                     <button @click="graphTab = 'relations'; loadRelations()"
-                        :class="graphTab === 'relations' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                        class="px-4 py-2 text-sm font-medium border-b-2 transition-colors">Relations</button>
+                        :class="graphTab === 'relations' ? 'subtab-active' : 'subtab-inactive'"
+                        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-200 rounded-t-lg">Relations</button>
                     <button @click="graphTab = 'graph'; loadGraphNetwork()"
-                        :class="graphTab === 'graph' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                        class="px-4 py-2 text-sm font-medium border-b-2 transition-colors">Graph</button>
+                        :class="graphTab === 'graph' ? 'subtab-active' : 'subtab-inactive'"
+                        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-200 rounded-t-lg">Graph</button>
                 </div>
 
                 <!-- ===== Entities sub-tab ===== -->
                 <div x-show="graphTab === 'entities'">
-                    <div class="flex items-center gap-2 mb-3">
+                    <div class="flex items-center gap-3 mb-4">
                         <input type="text" x-model="entitySearch" @keyup.enter="entityPage=1; loadEntities()"
                                placeholder="Search entity name..."
-                               class="border rounded-lg px-3 py-1.5 text-sm w-64 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none">
-                        <button @click="entityPage=1; loadEntities()" class="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">Search</button>
+                               class="glass-input rounded-xl px-4 py-2 text-sm w-72">
+                        <button @click="entityPage=1; loadEntities()" class="btn-secondary px-4 py-2 rounded-xl text-sm">Search</button>
                     </div>
 
-                    <div x-show="entityList.length === 0" class="text-center py-12 text-gray-400">
-                        <p class="text-lg mb-1">No entities yet</p>
-                        <p class="text-sm">Upload and process a document to extract entities.</p>
+                    <div x-show="entityList.length === 0" class="text-center py-16">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style="background: rgba(139, 92, 246, 0.1); border: 1px dashed rgba(139, 92, 246, 0.3);">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(139,92,246,0.5)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/></svg>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-1">No entities yet</p>
+                        <p class="text-xs text-slate-600">Upload and process a document to extract entities.</p>
                     </div>
 
-                    <div x-show="entityList.length > 0" class="overflow-x-auto">
+                    <div x-show="entityList.length > 0" class="overflow-x-auto rounded-xl">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="text-left text-gray-500 border-b">
-                                    <th class="pb-2 pr-4">Name</th>
-                                    <th class="pb-2 pr-4">Type</th>
-                                    <th class="pb-2 pr-4">Description</th>
-                                    <th class="pb-2 pr-4">File</th>
-                                    <th class="pb-2">Created</th>
+                                <tr class="text-left text-slate-500 border-b border-slate-700/50">
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Name</th>
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Type</th>
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Description</th>
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">File</th>
+                                    <th class="pb-3 font-medium text-xs uppercase tracking-wider">Created</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template x-for="e in entityList" :key="e.entity_id">
-                                    <tr class="border-b last:border-0 hover:bg-gray-50">
-                                        <td class="py-2.5 pr-4 font-medium text-gray-800">
+                                    <tr class="border-b border-slate-800/50 last:border-0">
+                                        <td class="py-3 pr-4 font-medium text-slate-200">
                                             <span class="font-mono text-xs" x-text="e.entity_id" :title="e.entity_id"></span>
                                         </td>
-                                        <td class="py-2.5 pr-4">
-                                            <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+                                        <td class="py-3 pr-4">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/15 text-blue-400 border border-blue-500/20"
                                                   x-text="e.entity_type"></span>
                                         </td>
-                                        <td class="py-2.5 pr-4 text-gray-600 max-w-md">
+                                        <td class="py-3 pr-4 text-slate-400 max-w-md">
                                             <span class="text-xs truncate block max-w-sm"
                                                   x-text="e.description ? e.description.split('<SEP>')[0] : '-'"
                                                   :title="e.description"></span>
                                         </td>
-                                        <td class="py-2.5 pr-4 text-gray-400 text-xs">
+                                        <td class="py-3 pr-4 text-slate-600 text-xs">
                                             <span class="truncate block max-w-[120px]" x-text="e.file_path || '-'" :title="e.file_path"></span>
                                         </td>
-                                        <td class="py-2.5 text-gray-400 text-xs" x-text="e.created_at ? new Date(e.created_at * 1000).toLocaleString() : '-'"></td>
+                                        <td class="py-3 text-slate-600 text-xs" x-text="e.created_at ? new Date(e.created_at * 1000).toLocaleString() : '-'"></td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -523,63 +940,66 @@
                     </div>
 
                     <!-- Entity pagination -->
-                    <div x-show="entityTotal > 50" class="flex items-center justify-between mt-4 text-sm text-gray-500">
-                        <span x-text="'Total: ' + entityTotal + ' entities'"></span>
+                    <div x-show="entityTotal > 50" class="flex items-center justify-between mt-5 text-sm text-slate-500">
+                        <span x-text="'Total: ' + entityTotal + ' entities'" class="text-xs"></span>
                         <div class="flex gap-2">
                             <button @click="loadEntities(entityPage - 1)" :disabled="entityPage <= 1"
-                                    class="px-3 py-1 rounded border disabled:opacity-40 hover:bg-gray-100">Prev</button>
-                            <span class="px-3 py-1" x-text="'Page ' + entityPage"></span>
+                                    class="btn-secondary px-3 py-1 rounded-lg text-xs disabled:opacity-30">Prev</button>
+                            <span class="px-3 py-1 text-xs text-slate-400" x-text="'Page ' + entityPage"></span>
                             <button @click="loadEntities(entityPage + 1)" :disabled="entityList.length < 50"
-                                    class="px-3 py-1 rounded border disabled:opacity-40 hover:bg-gray-100">Next</button>
+                                    class="btn-secondary px-3 py-1 rounded-lg text-xs disabled:opacity-30">Next</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- ===== Relations sub-tab ===== -->
                 <div x-show="graphTab === 'relations'">
-                    <div class="flex items-center gap-2 mb-3">
+                    <div class="flex items-center gap-3 mb-4">
                         <input type="text" x-model="relationSearch" @keyup.enter="relationPage=1; loadRelations()"
                                placeholder="Search source/target/description..."
-                               class="border rounded-lg px-3 py-1.5 text-sm w-64 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none">
-                        <button @click="relationPage=1; loadRelations()" class="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">Search</button>
+                               class="glass-input rounded-xl px-4 py-2 text-sm w-72">
+                        <button @click="relationPage=1; loadRelations()" class="btn-secondary px-4 py-2 rounded-xl text-sm">Search</button>
                     </div>
 
-                    <div x-show="relationList.length === 0" class="text-center py-12 text-gray-400">
-                        <p class="text-lg mb-1">No relations yet</p>
-                        <p class="text-sm">Upload and process a document to extract relationships.</p>
+                    <div x-show="relationList.length === 0" class="text-center py-16">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style="background: rgba(6, 182, 212, 0.1); border: 1px dashed rgba(6, 182, 212, 0.3);">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(6,182,212,0.5)" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-1">No relations yet</p>
+                        <p class="text-xs text-slate-600">Upload and process a document to extract relationships.</p>
                     </div>
 
-                    <div x-show="relationList.length > 0" class="overflow-x-auto">
+                    <div x-show="relationList.length > 0" class="overflow-x-auto rounded-xl">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="text-left text-gray-500 border-b">
-                                    <th class="pb-2 pr-4">Source</th>
-                                    <th class="pb-2 pr-4">Target</th>
-                                    <th class="pb-2 pr-4">Description</th>
-                                    <th class="pb-2 pr-4">Keywords</th>
-                                    <th class="pb-2 pr-4 text-right">Weight</th>
-                                    <th class="pb-2">File</th>
+                                <tr class="text-left text-slate-500 border-b border-slate-700/50">
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Source</th>
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Target</th>
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Description</th>
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider">Keywords</th>
+                                    <th class="pb-3 pr-4 font-medium text-xs uppercase tracking-wider text-right">Weight</th>
+                                    <th class="pb-3 font-medium text-xs uppercase tracking-wider">File</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template x-for="r in relationList" :key="r.source + '->' + r.target">
-                                    <tr class="border-b last:border-0 hover:bg-gray-50">
-                                        <td class="py-2.5 pr-4">
-                                            <span class="font-mono text-xs text-blue-600" x-text="r.source" :title="r.source"></span>
+                                    <tr class="border-b border-slate-800/50 last:border-0">
+                                        <td class="py-3 pr-4">
+                                            <span class="font-mono text-xs text-blue-400" x-text="r.source" :title="r.source"></span>
                                         </td>
-                                        <td class="py-2.5 pr-4">
-                                            <span class="font-mono text-xs text-purple-600" x-text="r.target" :title="r.target"></span>
+                                        <td class="py-3 pr-4">
+                                            <span class="font-mono text-xs text-purple-400" x-text="r.target" :title="r.target"></span>
                                         </td>
-                                        <td class="py-2.5 pr-4 text-gray-600 max-w-md">
+                                        <td class="py-3 pr-4 text-slate-400 max-w-md">
                                             <span class="text-xs truncate block max-w-sm"
                                                   x-text="r.description ? r.description.split('<SEP>')[0] : '-'"
                                                   :title="r.description"></span>
                                         </td>
-                                        <td class="py-2.5 pr-4">
-                                            <span class="text-xs text-gray-500" x-text="r.keywords || '-'"></span>
+                                        <td class="py-3 pr-4">
+                                            <span class="text-xs text-slate-500" x-text="r.keywords || '-'"></span>
                                         </td>
-                                        <td class="py-2.5 pr-4 text-right font-mono text-xs" x-text="r.weight"></td>
-                                        <td class="py-2.5 text-gray-400 text-xs">
+                                        <td class="py-3 pr-4 text-right font-mono text-xs text-slate-400" x-text="r.weight"></td>
+                                        <td class="py-3 text-slate-600 text-xs">
                                             <span class="truncate block max-w-[120px]" x-text="r.file_path || '-'" :title="r.file_path"></span>
                                         </td>
                                     </tr>
@@ -589,50 +1009,69 @@
                     </div>
 
                     <!-- Relation pagination -->
-                    <div x-show="relationTotal > 50" class="flex items-center justify-between mt-4 text-sm text-gray-500">
-                        <span x-text="'Total: ' + relationTotal + ' relations'"></span>
+                    <div x-show="relationTotal > 50" class="flex items-center justify-between mt-5 text-sm text-slate-500">
+                        <span x-text="'Total: ' + relationTotal + ' relations'" class="text-xs"></span>
                         <div class="flex gap-2">
                             <button @click="loadRelations(relationPage - 1)" :disabled="relationPage <= 1"
-                                    class="px-3 py-1 rounded border disabled:opacity-40 hover:bg-gray-100">Prev</button>
-                            <span class="px-3 py-1" x-text="'Page ' + relationPage"></span>
+                                    class="btn-secondary px-3 py-1 rounded-lg text-xs disabled:opacity-30">Prev</button>
+                            <span class="px-3 py-1 text-xs text-slate-400" x-text="'Page ' + relationPage"></span>
                             <button @click="loadRelations(relationPage + 1)" :disabled="relationList.length < 50"
-                                    class="px-3 py-1 rounded border disabled:opacity-40 hover:bg-gray-100">Next</button>
+                                    class="btn-secondary px-3 py-1 rounded-lg text-xs disabled:opacity-30">Next</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- ===== Graph sub-tab ===== -->
                 <div x-show="graphTab === 'graph'">
-                    <div x-show="!graphNetworkData" class="text-center py-12 text-gray-400">
-                        <p class="text-lg mb-1">No graph data</p>
-                        <p class="text-sm">Upload and process a document to build the knowledge graph.</p>
+                    <div x-show="!graphNetworkData" class="text-center py-16">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style="background: rgba(59, 130, 246, 0.1); border: 1px dashed rgba(59, 130, 246, 0.3);">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(59,130,246,0.5)" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-1">No graph data</p>
+                        <p class="text-xs text-slate-600">Upload and process a document to build the knowledge graph.</p>
                     </div>
                     <div x-show="graphNetworkData">
-                        <div class="flex items-center gap-3 mb-3 text-xs text-gray-500">
-                            <span>Nodes: <strong x-text="graphNetworkData?.nodes?.length || 0"></strong></span>
-                            <span>Edges: <strong x-text="graphNetworkData?.edges?.length || 0"></strong></span>
-                            <span x-show="graphNetworkData?.truncated" class="text-amber-600">
+                        <div class="flex items-center gap-3 mb-4 text-xs text-slate-500">
+                            <span>Nodes: <strong class="text-slate-300" x-text="graphNetworkData?.nodes?.length || 0"></strong></span>
+                            <span class="text-slate-700">|</span>
+                            <span>Edges: <strong class="text-slate-300" x-text="graphNetworkData?.edges?.length || 0"></strong></span>
+                            <span x-show="graphNetworkData?.truncated" class="text-amber-500">
                                 (showing first 500 of <span x-text="graphNetworkData?.total_nodes"></span>)
                             </span>
                             <button @click="$refs.graphContainer && $refs.graphContainer.__visNetwork && $refs.graphContainer.__visNetwork.fit()"
-                                    class="ml-auto px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">Fit View</button>
+                                    class="ml-auto btn-secondary px-3 py-1 rounded-lg text-xs">Fit View</button>
                             <button @click="graphPhysicsEnabled = !graphPhysicsEnabled; $refs.graphContainer && $refs.graphContainer.__visNetwork && $refs.graphContainer.__visNetwork.setOptions({physics: {enabled: graphPhysicsEnabled}})"
-                                    class="px-2 py-1 rounded hover:bg-gray-200"
-                                    :class="graphPhysicsEnabled ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'">
+                                    class="px-3 py-1 rounded-lg text-xs transition-colors"
+                                    :class="graphPhysicsEnabled ? 'bg-blue-500/15 text-blue-400 border border-blue-500/20' : 'btn-secondary'">
                                 <span x-text="graphPhysicsEnabled ? 'Physics: ON' : 'Physics: OFF'"></span>
                             </button>
                         </div>
-                        <!-- Legend -->
-                        <div class="flex flex-wrap gap-2 mb-3">
+                        <!-- Legend (clickable filter) -->
+                        <div class="flex flex-wrap gap-2 mb-4 items-center">
+                            <button @click="filterGraph(null)"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-all duration-200"
+                                    :class="graphFilterType === null
+                                        ? 'bg-slate-600/50 text-slate-200 border border-slate-400/30 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/30'">
+                                All
+                            </button>
                             <template x-for="[type, color] in Object.entries(graphTypeColors)" :key="type">
-                                <span class="inline-flex items-center gap-1 text-xs text-gray-600">
-                                    <span class="w-3 h-3 rounded-full inline-block" :style="'background:' + color"></span>
+                                <button @click="filterGraph(type)"
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-all duration-200"
+                                        :class="graphFilterType === type
+                                            ? 'text-white border shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/30'"
+                                        :style="graphFilterType === type
+                                            ? 'background:' + color + '30; border-color:' + color + '60; box-shadow: 0 0 12px ' + color + '30'
+                                            : ''">
+                                    <span class="w-2.5 h-2.5 rounded-full inline-block transition-shadow duration-200"
+                                          :style="'background:' + color + (graphFilterType === type ? '; box-shadow: 0 0 8px ' + color : '; box-shadow: 0 0 6px ' + color + '40')"></span>
                                     <span x-text="type"></span>
-                                </span>
+                                </button>
                             </template>
                         </div>
                         <div x-ref="graphContainer" id="kg-graph-container"
-                             class="border rounded-lg bg-white"
+                             class="rounded-xl"
                              style="height: 520px;"></div>
                     </div>
                 </div>
@@ -642,28 +1081,34 @@
 
         <!-- ========== Status Tab ========== -->
         <div x-show="activeTab === 'status'" x-transition>
-            <div class="bg-white rounded-lg shadow p-5">
-                <h2 class="text-lg font-semibold mb-4">System Status</h2>
-                <button @click="refreshStatus()" class="mb-4 bg-gray-100 text-gray-700 rounded-lg px-4 py-2 text-sm hover:bg-gray-200">
-                    Refresh
-                </button>
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 glow-dot" style="color: #10b981;"></div>
+                        <h2 class="text-base font-semibold text-slate-100">System Status</h2>
+                    </div>
+                    <button @click="refreshStatus()" class="btn-secondary px-4 py-1.5 rounded-lg text-xs font-medium">
+                        Refresh
+                    </button>
+                </div>
                 <div class="grid md:grid-cols-2 gap-4">
-                    <div class="p-3 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-500">Version</div>
-                        <div class="font-medium" x-text="health.version || 'N/A'"></div>
+                    <div class="stat-card rounded-xl p-4">
+                        <div class="text-xs text-slate-500 mb-1 uppercase tracking-wider">Version</div>
+                        <div class="font-medium text-slate-200 font-mono" x-text="health.version || 'N/A'"></div>
                     </div>
-                    <div class="p-3 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-500">Status</div>
-                        <div class="font-medium" x-text="health.status || 'Unknown'"></div>
+                    <div class="stat-card rounded-xl p-4">
+                        <div class="text-xs text-slate-500 mb-1 uppercase tracking-wider">Status</div>
+                        <div class="font-medium" :class="health.status === 'healthy' ? 'text-emerald-400' : 'text-slate-200'"
+                             x-text="health.status || 'Unknown'"></div>
                     </div>
-                    <div class="p-3 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-500">Parser Installed</div>
-                        <div class="font-medium" :class="health.parser_installed ? 'text-green-600' : 'text-red-600'"
+                    <div class="stat-card rounded-xl p-4">
+                        <div class="text-xs text-slate-500 mb-1 uppercase tracking-wider">Parser Installed</div>
+                        <div class="font-medium" :class="health.parser_installed ? 'text-emerald-400' : 'text-rose-400'"
                              x-text="health.parser_installed ? 'Yes' : 'No'"></div>
                     </div>
-                    <div class="p-3 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-500">RAG Initialized</div>
-                        <div class="font-medium" :class="health.lightrag_initialized ? 'text-green-600' : 'text-red-600'"
+                    <div class="stat-card rounded-xl p-4">
+                        <div class="text-xs text-slate-500 mb-1 uppercase tracking-wider">RAG Initialized</div>
+                        <div class="font-medium" :class="health.lightrag_initialized ? 'text-emerald-400' : 'text-rose-400'"
                              x-text="health.lightrag_initialized ? 'Yes' : 'No'"></div>
                     </div>
                 </div>
@@ -671,6 +1116,12 @@
         </div>
 
     </main>
+
+    <!-- Ambient background orbs -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-[-1]" aria-hidden="true">
+        <div class="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full opacity-[0.03]" style="background: radial-gradient(circle, #3b82f6, transparent 70%);"></div>
+        <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full opacity-[0.03]" style="background: radial-gradient(circle, #8b5cf6, transparent 70%);"></div>
+    </div>
 
     <script>
     function app() {
@@ -708,6 +1159,8 @@
             relationSearch: '',
             graphNetworkData: null,
             graphPhysicsEnabled: true,
+            graphFilterType: null,
+            graphNodes: null,
             graphTypeColors: {
                 person: '#f87171', organization: '#60a5fa', method: '#34d399',
                 concept: '#a78bfa', artifact: '#fbbf24', data: '#38bdf8',
@@ -805,7 +1258,7 @@
 
                 const nodes = new vis.DataSet(data.nodes.map(n => ({
                     ...n,
-                    font: { color: '#374151', size: 11 },
+                    font: { color: '#94a3b8', size: 11 },
                     shape: 'dot',
                     scaling: { min: 8, max: 28, label: { enabled: true, min: 9, max: 14 } },
                     borderWidth: 2,
@@ -814,7 +1267,7 @@
 
                 const edges = new vis.DataSet(data.edges.map(e => ({
                     ...e,
-                    color: { color: '#d1d5db', highlight: '#60a5fa', hover: '#93c5fd' },
+                    color: { color: '#334155', highlight: '#60a5fa', hover: '#93c5fd' },
                     arrows: { to: { enabled: true, scaleFactor: 0.5 } },
                     smooth: { type: 'continuous' },
                     width: Math.max(1, Math.min(4, (e.value || 1))),
@@ -831,7 +1284,25 @@
                     nodes: { shadow: true },
                 });
                 container.__visNetwork = network;
+                this.graphNodes = nodes;
+                this.graphFilterType = null;
                 this.graphPhysicsEnabled = true;
+            },
+
+            filterGraph(type) {
+                this.graphFilterType = type;
+                if (!this.graphNodes) return;
+                const updates = this.graphNodes.getIds().map(id => {
+                    const node = this.graphNodes.get(id);
+                    const match = type === null || node.group === type;
+                    return {
+                        id,
+                        opacity: match ? 1 : 0.08,
+                        font: { color: match ? '#94a3b8' : 'transparent', size: 11 },
+                        borderWidth: match ? 2 : 1,
+                    };
+                });
+                this.graphNodes.update(updates);
             },
 
             async loadConfigs() {

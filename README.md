@@ -13,6 +13,20 @@ A RESTful API and Web UI for [RAG-Anything](https://github.com/HKUDS/RAG-Anythin
 - **Knowledge Graph Explorer** — Browse entities, relationships, and visualize the graph as an interactive network
 - **Multimodal Query** — Query with text, images, tables, and equations in a single request
 
+## Screenshots
+
+| Documents | Upload |
+|-----------|--------|
+| ![Documents](web-ui/Documents.jpg) | ![Upload](web-ui/upload.jpg) |
+
+| Query | Knowledge Graph |
+|-------|-----------------|
+| ![Query](web-ui/Query.jpg) | ![Knowledge Graph](web-ui/KnowledgeGraph.jpg) |
+
+| Configuration | Status |
+|---------------|--------|
+| ![Configuration](web-ui/Configuration.jpg) | ![Status](web-ui/Status.jpg) |
+
 ## Quick Start
 
 ### Install
